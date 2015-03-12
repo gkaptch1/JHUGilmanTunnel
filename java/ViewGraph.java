@@ -11,14 +11,34 @@ import java.util.Random;
  */
 public class ViewGraph {
 
+    // We cap the max energy something can gain. This is just to limit nonsense
     private final float MAX_ENERGY = 100;
+    // The conversion rate between the energy of a point and the rate of motion
     private final float MOVEMENT_FACTOR = 5;
+    // The conversion rate between the distance from home a point is and the
+    // pull it feels towards home
     private final float RESISTANCE_FACTOR = 1;
+    // The conversion rate between the velocity vector of the independent points
+    // and the energy gain of the points
     private final float ENERGY_TRANSMISSION_FACTOR = 1 / 2;
+    // Constant leak factor for energy
+    private final float ENERGY_LEAK_FACTOR = 1;
 
+    // collection of all the points being tracked by the sensors
     Collection<IndependantPoint> independantObjects_;
+    // Collections of all the points that we initialize into the system. ie.
+    // leaves
     Collection<Point> dependantObjects_;
 
+    /**
+     * Constructor. Currently locations are initialized randomly
+     * 
+     * @param numI
+     *            number of indepenant sensor objects. Mostly for testing
+     *            purposes
+     * @param numD
+     *            number of dependant points in the system.
+     */
     public ViewGraph(int numI, int numD) {
         independantObjects_ = new ArrayList<IndependantPoint>();
         Random rand = new Random();
@@ -33,20 +53,32 @@ public class ViewGraph {
         }
     }
 
+    /**
+     * Updates the graph. Collects new positions of the Independant points, then
+     * updates based on their motion
+     */
     public void updateGraph() {
 
         for (IndependantPoint p : independantObjects_) {
+            // get new information from the sensors
             p.update();
         }
 
         for (Point p : dependantObjects_) {
+            // Updates the position of the points
             updatePosition(p);
+            // updates the energy of the dependant point
             updateEnergy(p);
         }
     }
 
+    /**
+     * position = oldPosition + energy*MOVEMENT_FACTOR -
+     * distanceFromHome*RESISTANCE_FACTOR
+     * 
+     * @param p
+     */
     private void updatePosition(Point p) {
-        // TODO dissapate energy
         p.setX_(p.getX_() + p.getEnergyX_() * MOVEMENT_FACTOR
                 - p.getDistanceFromHome() * RESISTANCE_FACTOR);
         p.setY_(p.getY_() + p.getEnergyY_() * MOVEMENT_FACTOR
@@ -57,8 +89,19 @@ public class ViewGraph {
         for (IndependantPoint i : independantObjects_) {
             partialEnergyUpdate(p, i);
         }
+        p.setEnergyX_(p.getEnergyX_() - ENERGY_LEAK_FACTOR);
+        p.setEnergyY_(p.getEnergyY_() - ENERGY_LEAK_FACTOR);
     }
 
+    /**
+     * Updates the energy of a point based off the motion of a single
+     * independant point. We take the orthogonal projection of the movement
+     * vector onto the vector connection the indpendant point and the dependant
+     * point.
+     * 
+     * @param p
+     * @param i
+     */
     private void partialEnergyUpdate(Point p, IndependantPoint i) {
         // TotalEnergyBoost is just the orthogonal linear projection of the
         // motion vector of i onto the vector connecting i and p
@@ -80,6 +123,12 @@ public class ViewGraph {
 
     }
 
+    /**
+     * Represents a dependant point
+     * 
+     * @author Gabe
+     *
+     */
     private class Point {
 
         private float x_;
