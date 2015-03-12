@@ -23,6 +23,8 @@ public class ViewGraph {
     private final float ENERGY_TRANSMISSION_FACTOR = 1 / 2;
     // Constant leak factor for energy
     private final float ENERGY_LEAK_FACTOR = 1;
+    // The area an independant object can influence.  This is so someone moving into the graph doesnt effect EVERYTHING
+    private final float AREA_OF_INFLUENCE = 10;
 
     // collection of all the points being tracked by the sensors
     Collection<IndependantPoint> independantObjects_;
@@ -87,7 +89,9 @@ public class ViewGraph {
 
     private void updateEnergy(Point p) {
         for (IndependantPoint i : independantObjects_) {
-            partialEnergyUpdate(p, i);
+            if (Math.sqrt(Math.pow(i.getX() - p.getX_(),2) + Math.pow(i.getY() - p.getY_(),2) < AREA_OF_INFLUENCE) {
+                partialEnergyUpdate(p, i);
+            }
         }
         p.setEnergyX_(p.getEnergyX_() - ENERGY_LEAK_FACTOR);
         p.setEnergyY_(p.getEnergyY_() - ENERGY_LEAK_FACTOR);
